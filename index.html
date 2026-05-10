@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KleyCards: Anime Empire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --common: #8e8e8e;
+            --rare: #007cf0;
+            --epic: #a000ff;
+            --legendary: #ff00c1;
+            --primary-glow: rgba(188, 19, 254, 0.6);
+            --bg-dark: #050508;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(90, 0, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 40%);
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Шапка сайта */
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            margin: 0;
+            letter-spacing: 5px;
+            background: linear-gradient(90deg, #fff, var(--legendary), #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px var(--primary-glow));
+        }
+
+        /* Игровое поле */
+        .deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 30px;
+            width: 90%;
+            max-width: 1400px;
+            padding-bottom: 120px;
+        }
+
+        /* Карточка */
+        .card {
+            height: 380px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Свечение по редкости */
+        .card.legendary { border-color: var(--legendary); box-shadow: inset 0 0 20px rgba(255, 0, 193, 0.2); }
+        .card.epic { border-color: var(--epic); }
+        .card.rare { border-color: var(--rare); }
+
+        .rarity-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 2;
+        }
+
+        .card-image {
+            height: 65%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 90px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+            transition: 0.3s;
+        }
+
+        .card:hover .card-image { transform: scale(1.2); }
+
+        .card-info {
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .card-info h3 { margin: 0; font-family: 'Orbitron', sans-serif; color: #fff; font-size: 1.2rem; }
+        .power-meter { color: #00ffcc; font-weight: bold; margin-top: 8px; font-size: 14px; }
+
+        /* Панель управления */
+        .controls {
+            position: fixed;
+            bottom: 40px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            transition: 0.4s;
+            text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-spawn { background: linear-gradient(45deg, var(--epic), var(--legendary)); color: white; }
+        .btn-admin { background: #1a1a1a; color: #666; border: 1px solid #333; }
+        .btn:hover { transform: translateY(-5px) scale(1.1); filter: brightness(1.2); }
+
+        /* Админ-панель */
+        #admin-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-window {
+            background: #111;
+            padding: 40px;
+            border-radius: 30px;
+            border: 2px solid var(--legendary);
+            width: 400px;
+            text-align: center;
+        }
+
+        input, select {
+            width: 100%; padding: 12px; margin: 10px 0;
+            background: #222; border: 1px solid #444; color: white; border-radius: 10px;
+        }
+
+        /* Анимации */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>KLEY CARDS</h1>
+    <p style="color: #888; letter-spacing: 2px;">ULTIMATE ANIME COLLECTION 2026</p>
+</header>
+
+<div class="deck" id="main-deck">
+    </div>
+
+<div class="controls">
+    <button class="btn btn-spawn" onclick="summonHero()">ПРИЗВАТЬ ГЕРОЯ</button>
+    <button class="btn btn-admin" onclick="authAdmin()">⚙️</button>
+</div>
+
+<div id="admin-overlay">
+    <div class="admin-window">
+        <h2 style="font-family: Orbitron; color: var(--legendary);">ADMIN COMMAND</h2>
+        <div id="stats" style="margin-bottom: 20px; font-size: 14px; color: #888;"></div>
+        
+        <input type="text" id="hero-name" placeholder="Имя персонажа">
+        <input type="text" id="hero-icon" placeholder="Эмодзи или URL картинки">
+        <select id="hero-rarity">
+            <option value="common">Обычный</option>
+            <option value="rare">Редкий</option>
+            <option value="epic">Эпический</option>
+            <option value="legendary">Легендарный</option>
+        </select>
+        
+        <button class="btn btn-spawn" onclick="saveHero()" style="width: 100%; margin-top: 10px;">ДОБАВИТЬ В БАЗУ</button>
+        <button class="btn" onclick="clearAll()" style="width: 100%; margin-top: 10px; background: #331111; color: #ff5555;">УДАЛИТЬ ВСЕ КАРТЫ</button>
+        <button class="btn" onclick="closeAdmin()" style="width: 100%; margin-top: 10px; background: #222; color: #fff;">ЗАКРЫТЬ</button>
+    </div>
+</div>
+
+<script>
+    // Начальная база персонажей
+    let heroBase = [
+        { name: "Sung Jin-Woo", icon: "🌌", rarity: "legendary" },
+        { name: "Gojo Satoru", icon: "🧿", rarity: "legendary" },
+        { name: "Naruto Uzumaki", icon: "🦊", rarity: "epic" },
+        { name: "Luffy", icon: "👒", rarity: "epic" },
+        { name: "Zoro", icon: "⚔️", rarity: "rare" },
+        { name: "Killua", icon: "⚡", rarity: "rare" }
+    ];
+
+    let spawnedCount = 0;
+
+    // Функция призыва
+    function summonHero() {
+        const hero = heroBase[Math.floor(Math.random() * heroBase.length)];
+        const deck = document.getElementById('main-deck');
+        
+        const card = document.createElement('div');
+        card.className = `card ${hero.rarity}`;
+        
+        const power = hero.rarity === 'legendary' ? 
+            Math.floor(Math.random() * 5000 + 5000) : 
+            Math.floor(Math.random() * 5000);
+
+        card.innerHTML = `
+            <div class="rarity-badge" style="background: var(--${hero.rarity})">${hero.rarity}</div>
+            <div class="card-image">${hero.icon}</div>
+            <div class="card-info">
+                <h3>${hero.name}</h3>
+                <div class="power-meter">ATK: ${power}</div>
+            </div>
+        `;
+        
+        deck.prepend(card);
+        spawnedCount++;
+        
+        // Эффект тряски для легендарок
+        if(hero.rarity === 'legendary') {
+            document.body.style.animation = 'shake 0.5s';
+            setTimeout(() => document.body.style.animation = '', 500);
+        }
+    }
+
+    // Логика админки
+    function authAdmin() {
+        const pass = prompt("Введите код доступа:");
+        if(pass === "3030") {
+            document.getElementById('admin-overlay').style.display = 'flex';
+            document.getElementById('stats').innerText = `Всего призвано: ${spawnedCount} | В базе: ${heroBase.length}`;
+        } else {
+            alert("Ошибка доступа!");
+        }
+    }
+
+    function closeAdmin() {
+        document.getElementById('admin-overlay').style.display = 'none';
+    }
+
+    function saveHero() {
+        const name = document.getElementById('hero-name').value;
+        const icon = document.getElementById('hero-icon').value;
+        const rarity = document.getElementById('hero-rarity').value;
+
+        if(name && icon) {
+            heroBase.push({ name, icon, rarity });
+            alert(`${name} добавлен в пул призыва!`);
+            document.getElementById('hero-name').value = '';
+            document.getElementById('hero-icon').value = '';
+        }
+    }
+
+    function clearAll() {
+        if(confirm("Очистить поле боя?")) {
+            document.getElementById('main-deck').innerHTML = '';
+            spawnedCount = 0;
+        }
+    }
+</script>
+
+<style>
+    /* Анимация тряски для легендарок */
+    @keyframes shake {
+        0% { transform: translate(1px, 1px) rotate(0deg); }
+        20% { transform: translate(-3px, 0px) rotate(-1deg); }
+        40% { transform: translate(3px, 2px) rotate(1deg); }
+        60% { transform: translate(-1px, -1px) rotate(0deg); }
+        100% { transform: translate(1px, 1px) rotate(0deg); }
+    }
+</style>
+
+</body>
+</html>
