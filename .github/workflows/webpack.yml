@@ -24,5 +24,13 @@ jobs:
 
     - name: Build
       run: |
-        npm install
-        npx webpack
+        # If package.json is present at the repository root, run the normal Node build.
+        # Otherwise skip the npm install/build to avoid ENOENT errors in repos that are static sites.
+        if [ -f package.json ]; then
+          echo "Found package.json in repository root — running npm ci and webpack"
+          npm ci
+          npx webpack
+        else
+          echo "No package.json found at repo root. Skipping npm install and webpack build."
+          echo "If your project has package.json in a subdirectory, update this workflow to cd into that folder or set working-directory."
+        fi
